@@ -14,6 +14,7 @@ import javafx.scene.text.Font;
 
 /**
  * Implements a Minesweeper game.
+ * First upload to git hub.
  */
 public class Minesweeper extends Application {
 
