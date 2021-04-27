@@ -13,7 +13,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 /**
- * Implements a Minesweeper game. First upload to git hub.
+ * Implements a Minesweeper game. First upload to git hub. TODO: Bomb search,
+ * shift click flagging, win/lose scenario
  */
 public class Minesweeper extends Application {
 
@@ -21,6 +22,11 @@ public class Minesweeper extends Application {
 	// (This variable is assigned its value in the start() method.)
 
 	private int[][] minesweeperModel; // Holds the data for the game board
+	private int[][] minesweeperBombCount; // Holds number of bombs around each square
+	private boolean[][] minesweeperisClicked; // Holds hidden/shown info about boxes (if user hasn't clicked on box it's
+												// false, if user has it's true)
+	private boolean[][] minesweeperisFlagged; // Holds flagged/not flagged info about boxes ( if user hasn't shift
+												// clicked on box it's false, if user has it's true)
 
 	private double canvasWidth, canvasHeight; // Width and Height of the canvas we're drawing on
 	private double boxWidth, boxHeight; // Width and height of each individual box
@@ -57,7 +63,8 @@ public class Minesweeper extends Application {
 
 				double bombPlacer = Math.random();
 
-				// Only places a bomb if there are less than 10 bombs and if random number is less than .125
+				// Only places a bomb if there are less than 10 bombs and if random number is
+				// less than .125
 				if (bombPlacer < .125 && bombCount < 10) {
 					minesweeperModel[i][d] = 1;
 					bombCount++;
@@ -65,13 +72,22 @@ public class Minesweeper extends Application {
 					minesweeperModel[i][d] = 0;
 				}
 
+				// User hasn't clicked on any boxes yet
+				minesweeperisClicked[i][d] = false;
+				minesweeperisFlagged[i][d] = false;
 			}
 		}
+
+		bombScout();
+
+		// Debug statement
+		System.out.println(bombCount + " bomb's placed.");
 	} // end initBoard()
 
 	/**
 	 * Initializes the global variables used in other methods. This includes
-	 * canvasWidth, canvasHeight, boxWidth, boxHeight, and numberOfBoxes.
+	 * canvasWidth, canvasHeight, boxWidth, boxHeight, and numberOfBoxes. Specify
+	 * the number of boxes wanted so can vary size of board.
 	 * 
 	 * @param boxes number of boxes in each row and column (e.g. 10 = 100 total
 	 *              boxes)
@@ -81,6 +97,9 @@ public class Minesweeper extends Application {
 		numberOfBoxes = boxes;
 
 		minesweeperModel = new int[numberOfBoxes][numberOfBoxes];
+		minesweeperBombCount = new int[numberOfBoxes][numberOfBoxes];
+		minesweeperisClicked = new boolean[numberOfBoxes][numberOfBoxes];
+		minesweeperisFlagged = new boolean[numberOfBoxes][numberOfBoxes];
 
 		canvasWidth = g.getCanvas().getWidth();
 		canvasHeight = g.getCanvas().getHeight();
@@ -104,8 +123,20 @@ public class Minesweeper extends Application {
 		for (int i = 0; i < numberOfBoxes; i++) {
 			for (int d = 0; d < numberOfBoxes; d++) {
 
-				// hidden
-				if (minesweeperModel[i][d] == 0) {
+				if(minesweeperModel[i][d] == 1) {
+					g.setLineWidth(4);
+					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+					g.setFill(Color.DARKGREEN);
+					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+					g.setStroke(Color.BLACK);
+					g.setLineWidth(1);
+					g.strokeText("*", xCoord + (boxWidth / 2.25),
+							yCoord + (boxHeight / 1.5));
+					xCoord += boxWidth;
+				}
+				
+				// not clicked(hidden), not flagged
+				else if ( (minesweeperModel[i][d] == 0) && (minesweeperisClicked[i][d] == false) && (minesweeperisFlagged[i][d] == false)) {
 					// Fills the box with dark green
 					g.setLineWidth(4);
 					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
@@ -114,23 +145,274 @@ public class Minesweeper extends Application {
 					xCoord += boxWidth;
 				}
 
-				// 
-				else if (minesweeperModel[i][d] == 1) {
-					// Fills the box with light green
+				// not clicked, flagged
+				else if ( (minesweeperModel[i][d] == 0) && (minesweeperisClicked[i][d] == false) && (minesweeperisFlagged[i][d] == true)) {
+					// Fills the box with pink
 					g.setLineWidth(4);
 					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.DARKGREEN);
+					g.setFill(Color.DEEPPINK);
 					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setStroke(Color.BLACK);
-					g.strokeText("*", xCoord + (boxWidth / 2.25), yCoord + (boxHeight / 1.5));
 					xCoord += boxWidth;
+
+					// debug statement
+					// System.out.println("Not clicked, flagged has been executed.");
 				}
 
+				// clicked(no longer hidden), not flagged
+				else if ((minesweeperisClicked[i][d] == true) && (minesweeperisFlagged[i][d] == false)) {
+					// Fills the box with dark green
+					g.setLineWidth(4);
+					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+					g.setFill(Color.LIGHTGREEN);
+					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+					// draw bomb count in each box
+					if (minesweeperBombCount[i][d] > 0) {
+						g.setStroke(Color.BLACK);
+						g.setLineWidth(1);
+						g.strokeText(minesweeperBombCount[i][d] + "", xCoord + (boxWidth / 2.25),
+								yCoord + (boxHeight / 1.5));
+					}
+
+					xCoord += boxWidth;
+
+					// debug statement
+					// System.out.println("Clicked, not flagged has been executed.");
+				}
+
+				// bomb
+				/*
+				 * else if (minesweeperModel[i][d] == 1) { g.setLineWidth(4);
+				 * g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+				 * g.setFill(Color.DARKGREEN); g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+				 * g.setStroke(Color.BLACK); g.strokeText("*", xCoord + (boxWidth / 2.25),
+				 * yCoord + (boxHeight / 1.5)); xCoord += boxWidth; }
+				 */
 			}
+
 			xCoord = 0;
 			yCoord += boxHeight;
 		}
 	} // end drawBoard()
+
+	/**
+	 * Looks vertically, horizontally, and diagonally on clicked square and sums the
+	 * amount of bombs found.
+	 */
+	private void bombScout() {
+
+		int rowLength, columnLength, bombCounter;
+
+		rowLength = minesweeperModel.length;
+		columnLength = minesweeperModel.length;
+
+		bombCounter = 0;
+
+		// Go through each box in the matrix
+		for (int r = 0; r < rowLength; r++) {
+			for (int c = 0; c < columnLength; c++) {
+
+				/*
+				 * This is where we check around the current box for bombs and then put the bomb
+				 * count in the minesweeperBombCount array.
+				 * 
+				 * THIS IS FOR EDGE CASES
+				 */
+				if ((r == 0 || r == 9) || (c == 0 || c == 9)) {
+
+					/*** Corners ***/
+
+					// Only 3 boxes to check when dealing with a corner
+
+					// upper left corner (0, 0)
+					if (r == 0 && c == 0) {
+
+						if (minesweeperModel[r + 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c + 1] == 1) {
+							bombCounter++;
+						}
+
+					}
+
+					// lower left corner (9, 0)
+					if (r == 9 && c == 0) {
+
+						if (minesweeperModel[r - 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c + 1] == 1) {
+							bombCounter++;
+						}
+					}
+
+					// upper right corner (0, 9)
+					if (r == 0 && c == 9) {
+
+						if (minesweeperModel[r + 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c - 1] == 1) {
+							bombCounter++;
+						}
+
+					}
+
+					// lower right corner (9, 9)
+					if (r == 9 && c == 9) {
+						if (minesweeperModel[r - 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c - 1] == 1) {
+							bombCounter++;
+						}
+					}
+
+					/*** Everything other than corners ***/
+
+					// Only 5 boxes to check when dealing with sides
+
+					// left side (1 to 8, 0)
+					if ((r >= 1 && r <= 8) && c == 0) {
+						if (minesweeperModel[r - 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c] == 1) {
+							bombCounter++;
+						}
+					}
+
+					// right side (1 to 8, 9)
+					if ((r >= 1 && r <= 8) && c == 9) {
+						if (minesweeperModel[r - 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c] == 1) {
+							bombCounter++;
+						}
+					}
+
+					// top side (0, 1 to 8)
+					if (r == 0 && (c >= 1 && c <= 8)) {
+						if (minesweeperModel[r][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r + 1][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c + 1] == 1) {
+							bombCounter++;
+						}
+					}
+
+					// bottom side (9, 1 to 8)
+					if (r == 9 && (c >= 1 && c <= 8)) {
+						if (minesweeperModel[r][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c - 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r - 1][c + 1] == 1) {
+							bombCounter++;
+						}
+						if (minesweeperModel[r][c + 1] == 1) {
+							bombCounter++;
+						}
+					}
+
+				}
+
+				/*
+				 * This is where we check around the current box for bombs and then put the bomb
+				 * count in the minesweeperBombCount array.
+				 * 
+				 * THIS IS FOR NOT EDGE CASES
+				 */
+				else {
+					// Vertical
+					if (minesweeperModel[r - 1][c] == 1) {
+						bombCounter++;
+					}
+					if (minesweeperModel[r + 1][c] == 1) {
+						bombCounter++;
+					}
+
+					// Horizontal
+					if (minesweeperModel[r][c - 1] == 1) {
+						bombCounter++;
+					}
+					if (minesweeperModel[r][c + 1] == 1) {
+						bombCounter++;
+					}
+
+					// Diagonal
+					if (minesweeperModel[r - 1][c - 1] == 1) {
+						bombCounter++;
+					}
+					if (minesweeperModel[r - 1][c + 1] == 1) {
+						bombCounter++;
+					}
+					if (minesweeperModel[r + 1][c - 1] == 1) {
+						bombCounter++;
+					}
+					if (minesweeperModel[r + 1][c + 1] == 1) {
+						bombCounter++;
+					}
+				}
+
+				// Add bomb count to bomb count array and reset the bomb counter
+				minesweeperBombCount[r][c] = bombCounter;
+				System.out.println("[" + r + "]" + "[" + c + "]" + ":" + bombCounter);
+				bombCounter = 0;
+
+			}
+
+		}
+
+		// System.out.println("Bomb Scout test - Number of rows: " + numOfRows);
+
+	}
 
 	/**
 	 * This method is called when the user presses the mouse on the canvas where the
@@ -148,11 +430,27 @@ public class Minesweeper extends Application {
 		y = evt.getY();
 		shift = evt.isShiftDown();
 
+		// Computes row,column from x,y coordinates
 		row = (int) (y / boxHeight);
 		column = (int) (x / boxWidth);
 
-		minesweeperModel[row][column] = 3;
+		// User is trying to flag a box
+		if (shift) {
+			minesweeperisFlagged[row][column] = true;
+		}
+
+		else if (!shift) {
+			minesweeperisClicked[row][column] = true;
+		}
+
+		// Tell the array the user has clicked the row/column box
+		// if (minesweeperisClicked[row][column] == false) {
+		// minesweeperisClicked[row][column] = true;
+		// }
+
+		// minesweeperModel[row][column] = 3;
 		drawBoard();
+		// bombScout();
 
 		// Debug statements
 		System.out.println("Mouse was pressed at: (" + x + ", " + y + ")");
