@@ -14,7 +14,14 @@ import javafx.scene.text.Font;
 
 /**
  * Implements a Minesweeper game. First upload to git hub. TODO: Bomb search,
- * shift click flagging, win/lose scenario
+ * shift click flagging, win/lose scenario TODO: Link mousepressed with
+ * drawboard in a way where the correct output is drawn. - If user clicks bomb,
+ * game over - If user flags hidden box, make it so the box can no longer be
+ * clicked on until unflagged - Only hidden boxes should be flaggable, shown
+ * boxes should not be flaggable
+ * 
+ * TODO: ALMOST DONE, COMPLETE FLAGGING AND GAME ENDING, SOME BUGS IN DRAWBOARD
+ * METHOD
  */
 public class Minesweeper extends Application {
 
@@ -31,6 +38,7 @@ public class Minesweeper extends Application {
 	private double canvasWidth, canvasHeight; // Width and Height of the canvas we're drawing on
 	private double boxWidth, boxHeight; // Width and height of each individual box
 	private int numberOfBoxes; // Number of boxes in each row and column
+	private boolean gameOver; // Keeps track of whether game is over
 
 	/**
 	 * Starts a new game, and initializes all of the global data for the game. This
@@ -95,6 +103,7 @@ public class Minesweeper extends Application {
 	private void initVariables(int boxes) {
 
 		numberOfBoxes = boxes;
+		gameOver = false;
 
 		minesweeperModel = new int[numberOfBoxes][numberOfBoxes];
 		minesweeperBombCount = new int[numberOfBoxes][numberOfBoxes];
@@ -123,43 +132,31 @@ public class Minesweeper extends Application {
 		for (int i = 0; i < numberOfBoxes; i++) {
 			for (int d = 0; d < numberOfBoxes; d++) {
 
-				if(minesweeperModel[i][d] == 1) {
+				boolean isClicked, isFlagged;
+				int isBomb;
+
+				isClicked = minesweeperisClicked[i][d];
+				isFlagged = minesweeperisFlagged[i][d];
+				isBomb = minesweeperModel[i][d];
+
+				// START FROM SCRATCH
+
+				// NOTHING CLICKED
+
+				// user clicked box, and hasn't been flagged
+				if (!isClicked && !isFlagged) {
 					g.setLineWidth(4);
 					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
 					g.setFill(Color.DARKGREEN);
 					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setStroke(Color.BLACK);
-					g.setLineWidth(1);
-					g.strokeText("*", xCoord + (boxWidth / 2.25),
-							yCoord + (boxHeight / 1.5));
-					xCoord += boxWidth;
-				}
-				
-				// not clicked(hidden), not flagged
-				else if ( (minesweeperModel[i][d] == 0) && (minesweeperisClicked[i][d] == false) && (minesweeperisFlagged[i][d] == false)) {
-					// Fills the box with dark green
-					g.setLineWidth(4);
-					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.DARKGREEN);
-					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+					// g.setStroke(Color.BLACK);
+					// g.setLineWidth(1);
+					// g.strokeText("*", xCoord + (boxWidth / 2.25), yCoord + (boxHeight / 1.5));
 					xCoord += boxWidth;
 				}
 
-				// not clicked, flagged
-				else if ( (minesweeperModel[i][d] == 0) && (minesweeperisClicked[i][d] == false) && (minesweeperisFlagged[i][d] == true)) {
-					// Fills the box with pink
-					g.setLineWidth(4);
-					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.DEEPPINK);
-					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-					xCoord += boxWidth;
-
-					// debug statement
-					// System.out.println("Not clicked, flagged has been executed.");
-				}
-
-				// clicked(no longer hidden), not flagged
-				else if ((minesweeperisClicked[i][d] == true) && (minesweeperisFlagged[i][d] == false)) {
+				// user clicked box, hasn't been flagged, no bomb in box
+				else if (isClicked && !isFlagged && (isBomb == 0)) {
 					// Fills the box with dark green
 					g.setLineWidth(4);
 					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
@@ -180,14 +177,33 @@ public class Minesweeper extends Application {
 					// System.out.println("Clicked, not flagged has been executed.");
 				}
 
-				// bomb
-				/*
-				 * else if (minesweeperModel[i][d] == 1) { g.setLineWidth(4);
-				 * g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-				 * g.setFill(Color.DARKGREEN); g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-				 * g.setStroke(Color.BLACK); g.strokeText("*", xCoord + (boxWidth / 2.25),
-				 * yCoord + (boxHeight / 1.5)); xCoord += boxWidth; }
-				 */
+				// user shift-clicked box, box hasn't been clicked before
+				else if (isFlagged && !isClicked) {
+					g.setLineWidth(4);
+					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+					g.setFill(Color.DEEPPINK);
+					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+					xCoord += boxWidth;
+				}
+
+				// user clicked box, is a bomb in box
+				else if (isClicked && !isFlagged && (isBomb == 1)) {
+					// Fills the box with dark red
+					g.setLineWidth(4);
+					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+					g.setFill(Color.DARKRED);
+					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+					xCoord += boxWidth;
+
+					g.strokeText("BOOOOOOM", 200, 200, 100);
+					
+					gameOver = true;
+					// debug statement
+					// System.out.println("Clicked, not flagged has been executed.");
+				}
+
 			}
 
 			xCoord = 0;
@@ -412,8 +428,8 @@ public class Minesweeper extends Application {
 
 		// System.out.println("Bomb Scout test - Number of rows: " + numOfRows);
 
-	}
-
+	} // end bombScout()
+	
 	/**
 	 * This method is called when the user presses the mouse on the canvas where the
 	 * minesweeper board is drawn. (The start() method sets this method to be the
@@ -426,6 +442,9 @@ public class Minesweeper extends Application {
 		int row, column; // The [row][column] that user clicks
 
 		boolean shift; // Tells whether shift key was held down while mouse was pressed.
+		boolean isFlagged; // Tells whether box is flagged
+		boolean isClicked; // Tells whether box has been click or not
+
 		x = evt.getX();
 		y = evt.getY();
 		shift = evt.isShiftDown();
@@ -434,24 +453,32 @@ public class Minesweeper extends Application {
 		row = (int) (y / boxHeight);
 		column = (int) (x / boxWidth);
 
-		// User is trying to flag a box
-		if (shift) {
-			minesweeperisFlagged[row][column] = true;
-		}
+		//
+		isFlagged = minesweeperisFlagged[row][column];
+		isClicked = minesweeperisClicked[row][column];
 
-		else if (!shift) {
+		// regular click
+		if (!isClicked && !isFlagged && !shift) {
 			minesweeperisClicked[row][column] = true;
 		}
 
-		// Tell the array the user has clicked the row/column box
-		// if (minesweeperisClicked[row][column] == false) {
-		// minesweeperisClicked[row][column] = true;
-		// }
+		// User is trying to flag a box
+		// Changes from flagged to not flagged.
+		else if (shift && !isClicked) {
 
-		// minesweeperModel[row][column] = 3;
+			if (isFlagged) {
+				minesweeperisFlagged[row][column] = false;
+			} else if (!isFlagged) {
+				minesweeperisFlagged[row][column] = true;
+			}
+		}
+
 		drawBoard();
-		// bombScout();
-
+		
+		if(gameOver) {
+			
+		}
+		
 		// Debug statements
 		System.out.println("Mouse was pressed at: (" + x + ", " + y + ")");
 		System.out.println("Row: " + row + " Column: " + column + "\n");
