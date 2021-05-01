@@ -20,8 +20,10 @@ import javafx.scene.text.Font;
  * clicked on until unflagged - Only hidden boxes should be flaggable, shown
  * boxes should not be flaggable
  * 
- * TODO: ALMOST DONE, COMPLETE FLAGGING AND GAME ENDING, SOME BUGS IN DRAWBOARD
- * METHOD
+ * TODO: 
+ *  -- end game if user wins - this should be done if the # of boxes clicked is equal to (numberOfBoxes - numberOfBombs)
+ *  -- initBoard() doesn't always place 10 bombs
+ *  -- try to re-factor drawBoard() and doMouseClick() to be more succinct
  */
 public class Minesweeper extends Application {
 
@@ -129,85 +131,89 @@ public class Minesweeper extends Application {
 		xCoord = 0;
 		yCoord = 0;
 
-		for (int i = 0; i < numberOfBoxes; i++) {
-			for (int d = 0; d < numberOfBoxes; d++) {
+		if (!gameOver) {
+			for (int i = 0; i < numberOfBoxes; i++) {
+				for (int d = 0; d < numberOfBoxes; d++) {
 
-				boolean isClicked, isFlagged;
-				int isBomb;
+					boolean isClicked, isFlagged;
+					int isBomb;
 
-				isClicked = minesweeperisClicked[i][d];
-				isFlagged = minesweeperisFlagged[i][d];
-				isBomb = minesweeperModel[i][d];
+					isClicked = minesweeperisClicked[i][d];
+					isFlagged = minesweeperisFlagged[i][d];
+					isBomb = minesweeperModel[i][d];
 
-				// START FROM SCRATCH
+					// START FROM SCRATCH
 
-				// NOTHING CLICKED
+					// NOTHING CLICKED
 
-				// user clicked box, and hasn't been flagged
-				if (!isClicked && !isFlagged) {
-					g.setLineWidth(4);
-					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.DARKGREEN);
-					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-					// g.setStroke(Color.BLACK);
-					// g.setLineWidth(1);
-					// g.strokeText("*", xCoord + (boxWidth / 2.25), yCoord + (boxHeight / 1.5));
-					xCoord += boxWidth;
-				}
-
-				// user clicked box, hasn't been flagged, no bomb in box
-				else if (isClicked && !isFlagged && (isBomb == 0)) {
-					// Fills the box with dark green
-					g.setLineWidth(4);
-					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.LIGHTGREEN);
-					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-
-					// draw bomb count in each box
-					if (minesweeperBombCount[i][d] > 0) {
-						g.setStroke(Color.BLACK);
-						g.setLineWidth(1);
-						g.strokeText(minesweeperBombCount[i][d] + "", xCoord + (boxWidth / 2.25),
-								yCoord + (boxHeight / 1.5));
+					// not clicked, and hasn't been flagged
+					if (!isClicked && !isFlagged) {
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DARKGREEN);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+						// g.setStroke(Color.BLACK);
+						// g.setLineWidth(1);
+						// g.strokeText("*", xCoord + (boxWidth / 2.25), yCoord + (boxHeight / 1.5));
+						xCoord += boxWidth;
 					}
 
-					xCoord += boxWidth;
+					// user clicked box, hasn't been flagged, no bomb in box
+					else if (isClicked && !isFlagged && (isBomb == 0)) {
+						// Fills the box with dark green
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.LIGHTGREEN);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
 
-					// debug statement
-					// System.out.println("Clicked, not flagged has been executed.");
+						// draw bomb count in each box
+						if (minesweeperBombCount[i][d] > 0) {
+							g.setStroke(Color.BLACK);
+							g.setLineWidth(1);
+							g.strokeText(minesweeperBombCount[i][d] + "", xCoord + (boxWidth / 2.25),
+									yCoord + (boxHeight / 1.5));
+						}
+
+						xCoord += boxWidth;
+
+						// debug statement
+						// System.out.println("Clicked, not flagged has been executed.");
+					}
+
+					// user shift-clicked box, box hasn't been clicked before
+					else if (isFlagged && !isClicked) {
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DEEPPINK);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						xCoord += boxWidth;
+					}
+
+					// user clicked box, is a bomb in box
+					else if (isClicked && !isFlagged && (isBomb == 1)) {
+						// Fills the box with dark red
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DARKRED);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						g.setFill(Color.CRIMSON);
+						g.setLineWidth(10);
+						g.fillText("BOOM", xCoord, yCoord);
+
+						xCoord += boxWidth;
+
+						gameOver = true;
+						// debug statement
+						// System.out.println("Clicked, not flagged has been executed.");
+					}
+
 				}
 
-				// user shift-clicked box, box hasn't been clicked before
-				else if (isFlagged && !isClicked) {
-					g.setLineWidth(4);
-					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.DEEPPINK);
-					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-
-					xCoord += boxWidth;
-				}
-
-				// user clicked box, is a bomb in box
-				else if (isClicked && !isFlagged && (isBomb == 1)) {
-					// Fills the box with dark red
-					g.setLineWidth(4);
-					g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-					g.setFill(Color.DARKRED);
-					g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-
-					xCoord += boxWidth;
-
-					g.strokeText("BOOOOOOM", 200, 200, 100);
-					
-					gameOver = true;
-					// debug statement
-					// System.out.println("Clicked, not flagged has been executed.");
-				}
-
+				xCoord = 0;
+				yCoord += boxHeight;
 			}
-
-			xCoord = 0;
-			yCoord += boxHeight;
 		}
 	} // end drawBoard()
 
@@ -429,7 +435,7 @@ public class Minesweeper extends Application {
 		// System.out.println("Bomb Scout test - Number of rows: " + numOfRows);
 
 	} // end bombScout()
-	
+
 	/**
 	 * This method is called when the user presses the mouse on the canvas where the
 	 * minesweeper board is drawn. (The start() method sets this method to be the
@@ -473,12 +479,12 @@ public class Minesweeper extends Application {
 			}
 		}
 
-		drawBoard();
-		
-		if(gameOver) {
-			
+		if (gameOver) {
+			drawBoard();
 		}
-		
+
+		drawBoard();
+
 		// Debug statements
 		System.out.println("Mouse was pressed at: (" + x + ", " + y + ")");
 		System.out.println("Row: " + row + " Column: " + column + "\n");
