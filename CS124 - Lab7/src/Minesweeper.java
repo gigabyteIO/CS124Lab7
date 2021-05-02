@@ -20,10 +20,9 @@ import javafx.scene.text.Font;
  * clicked on until unflagged - Only hidden boxes should be flaggable, shown
  * boxes should not be flaggable
  * 
- * TODO: 
- *  -- end game if user wins - this should be done if the # of boxes clicked is equal to (numberOfBoxes - numberOfBombs)
- *  -- initBoard() doesn't always place 10 bombs
- *  -- try to re-factor drawBoard() and doMouseClick() to be more succinct
+ * TODO: -- end game if user wins - this should be done if the # of boxes
+ * clicked is equal to (numberOfBoxes - numberOfBombs) -- initBoard() doesn't
+ * always place 10 bombs 
  */
 public class Minesweeper extends Application {
 
@@ -48,14 +47,11 @@ public class Minesweeper extends Application {
 	 * called when the user selects the "New Game" command from the "Control" menu.
 	 */
 	private void newGame() {
-		// REPLACE THE FOLLOWING CODE!
+
 		initVariables(10);
 		initBoard();
 		drawBoard();
-		/*
-		 * g.setFill(Color.WHITE); g.fillRect(0, 0, 400, 400); g.setFill(Color.BLACK);
-		 * g.fillText("newGame() was called", 50, 50);
-		 */
+
 	} // end newGame()
 
 	/**
@@ -119,103 +115,6 @@ public class Minesweeper extends Application {
 		boxHeight = canvasHeight / numberOfBoxes;
 
 	} // end initVariables()
-
-	/**
-	 * Draws the mine sweeper board.
-	 */
-	private void drawBoard() {
-
-		// Initialize variables
-		double xCoord, yCoord;
-
-		xCoord = 0;
-		yCoord = 0;
-
-		if (!gameOver) {
-			for (int i = 0; i < numberOfBoxes; i++) {
-				for (int d = 0; d < numberOfBoxes; d++) {
-
-					boolean isClicked, isFlagged;
-					int isBomb;
-
-					isClicked = minesweeperisClicked[i][d];
-					isFlagged = minesweeperisFlagged[i][d];
-					isBomb = minesweeperModel[i][d];
-
-					// START FROM SCRATCH
-
-					// NOTHING CLICKED
-
-					// not clicked, and hasn't been flagged
-					if (!isClicked && !isFlagged) {
-						g.setLineWidth(4);
-						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-						g.setFill(Color.DARKGREEN);
-						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-						// g.setStroke(Color.BLACK);
-						// g.setLineWidth(1);
-						// g.strokeText("*", xCoord + (boxWidth / 2.25), yCoord + (boxHeight / 1.5));
-						xCoord += boxWidth;
-					}
-
-					// user clicked box, hasn't been flagged, no bomb in box
-					else if (isClicked && !isFlagged && (isBomb == 0)) {
-						// Fills the box with dark green
-						g.setLineWidth(4);
-						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-						g.setFill(Color.LIGHTGREEN);
-						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-
-						// draw bomb count in each box
-						if (minesweeperBombCount[i][d] > 0) {
-							g.setStroke(Color.BLACK);
-							g.setLineWidth(1);
-							g.strokeText(minesweeperBombCount[i][d] + "", xCoord + (boxWidth / 2.25),
-									yCoord + (boxHeight / 1.5));
-						}
-
-						xCoord += boxWidth;
-
-						// debug statement
-						// System.out.println("Clicked, not flagged has been executed.");
-					}
-
-					// user shift-clicked box, box hasn't been clicked before
-					else if (isFlagged && !isClicked) {
-						g.setLineWidth(4);
-						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-						g.setFill(Color.DEEPPINK);
-						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-
-						xCoord += boxWidth;
-					}
-
-					// user clicked box, is a bomb in box
-					else if (isClicked && !isFlagged && (isBomb == 1)) {
-						// Fills the box with dark red
-						g.setLineWidth(4);
-						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
-						g.setFill(Color.DARKRED);
-						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
-
-						g.setFill(Color.CRIMSON);
-						g.setLineWidth(10);
-						g.fillText("BOOM", xCoord, yCoord);
-
-						xCoord += boxWidth;
-
-						gameOver = true;
-						// debug statement
-						// System.out.println("Clicked, not flagged has been executed.");
-					}
-
-				}
-
-				xCoord = 0;
-				yCoord += boxHeight;
-			}
-		}
-	} // end drawBoard()
 
 	/**
 	 * Looks vertically, horizontally, and diagonally on clicked square and sums the
@@ -437,8 +336,142 @@ public class Minesweeper extends Application {
 	} // end bombScout()
 
 	/**
+	 * Draws the mine sweeper board.
+	 */
+	private void drawBoard() {
+
+		// Initialize variables
+		double xCoord, yCoord;
+
+		xCoord = 0;
+		yCoord = 0;
+
+		if (!gameOver) {
+			for (int i = 0; i < numberOfBoxes; i++) {
+				for (int d = 0; d < numberOfBoxes; d++) {
+
+					boolean isClicked, isFlagged;
+					int isBomb;
+
+					isClicked = minesweeperisClicked[i][d];
+					isFlagged = minesweeperisFlagged[i][d];
+					isBomb = minesweeperModel[i][d];
+
+					// START FROM SCRATCH
+
+					// NOTHING CLICKED
+
+					// not clicked, and hasn't been flagged
+					if (!isClicked && !isFlagged) {
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DARKGREEN);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+						// g.setStroke(Color.BLACK);
+						// g.setLineWidth(1);
+						// g.strokeText("*", xCoord + (boxWidth / 2.25), yCoord + (boxHeight / 1.5));
+						xCoord += boxWidth;
+					}
+
+					// user clicked box, hasn't been flagged, no bomb in box
+					else if (isClicked && !isFlagged && isBomb == 0) {
+						// Fills the box with dark green
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.LIGHTGREEN);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						// draw bomb count in each box
+						if (minesweeperBombCount[i][d] > 0) {
+							g.setStroke(Color.BLACK);
+							g.setLineWidth(1);
+							g.strokeText(minesweeperBombCount[i][d] + "", xCoord + (boxWidth / 2.25),
+									yCoord + (boxHeight / 1.5));
+						}
+
+						xCoord += boxWidth;
+
+						// debug statement
+						// System.out.println("Clicked, not flagged has been executed.");
+					}
+
+					// user shift-clicked box, box hasn't been clicked before
+					else if (isFlagged && !isClicked) {
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DEEPPINK);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						xCoord += boxWidth;
+					}
+
+				}
+				xCoord = 0;
+				yCoord += boxHeight;
+			}
+
+		}
+		// Game is over, display the full board
+		else if (gameOver) {
+
+			for (int i = 0; i < numberOfBoxes; i++) {
+				for (int d = 0; d < numberOfBoxes; d++) {
+
+					int isBomb;
+					isBomb = minesweeperModel[i][d];
+
+					if (isBomb == 0) {
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.LIGHTGREEN);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						// draw bomb count in each box
+						if (minesweeperBombCount[i][d] > 0) {
+							g.setStroke(Color.BLACK);
+							g.setLineWidth(1);
+							g.strokeText(minesweeperBombCount[i][d] + "", xCoord + (boxWidth / 2.25),
+									yCoord + (boxHeight / 1.5));
+						}
+
+						xCoord += boxWidth;
+					}
+
+					else if (isBomb == 1) {
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DARKRED);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						xCoord += boxWidth;
+					}
+
+					// Indicates which box user clicked to lose the game
+					else if (isBomb == 2) {
+						// Fills the box with dark red
+						g.setLineWidth(4);
+						g.strokeRect(xCoord, yCoord, boxWidth, boxHeight);
+						g.setFill(Color.DARKRED);
+						g.fillRect(xCoord, yCoord, boxWidth, boxHeight);
+
+						g.setFill(Color.CRIMSON);
+						g.setLineWidth(1);
+						g.strokeText("BOOM", xCoord + (boxWidth / 5), yCoord + (boxHeight / 2.25));
+
+						xCoord += boxWidth;
+					}
+
+				}
+				xCoord = 0;
+				yCoord += boxHeight;
+			}
+		}
+
+	} // end drawBoard()
+
+	/**
 	 * This method is called when the user presses the mouse on the canvas where the
-	 * minesweeper board is drawn. (The start() method sets this method to be the
+	 * mine sweeper board is drawn. (The start() method sets this method to be the
 	 * handler for a mousePressed event on the canvas.)
 	 * 
 	 * @param evt this event object contains information about the more press event.
@@ -450,6 +483,7 @@ public class Minesweeper extends Application {
 		boolean shift; // Tells whether shift key was held down while mouse was pressed.
 		boolean isFlagged; // Tells whether box is flagged
 		boolean isClicked; // Tells whether box has been click or not
+		int isBomb; // Tells whether there is a bomb in the box clicked
 
 		x = evt.getX();
 		y = evt.getY();
@@ -462,15 +496,11 @@ public class Minesweeper extends Application {
 		//
 		isFlagged = minesweeperisFlagged[row][column];
 		isClicked = minesweeperisClicked[row][column];
-
-		// regular click
-		if (!isClicked && !isFlagged && !shift) {
-			minesweeperisClicked[row][column] = true;
-		}
+		isBomb = minesweeperModel[row][column];
 
 		// User is trying to flag a box
 		// Changes from flagged to not flagged.
-		else if (shift && !isClicked) {
+		if (shift && !isClicked) {
 
 			if (isFlagged) {
 				minesweeperisFlagged[row][column] = false;
@@ -479,8 +509,17 @@ public class Minesweeper extends Application {
 			}
 		}
 
-		if (gameOver) {
-			drawBoard();
+		// Normal click
+		else if (!shift && !isClicked && !isFlagged && !gameOver) {
+			minesweeperisClicked[row][column] = true;
+
+			// there is a bomb, end the game and mark the row/column with a 2 so the
+			// drawBoard() knows what to write
+			if (isBomb == 1) {
+				minesweeperModel[row][column] = 2;
+				gameOver = true;
+			}
+
 		}
 
 		drawBoard();
@@ -489,12 +528,6 @@ public class Minesweeper extends Application {
 		System.out.println("Mouse was pressed at: (" + x + ", " + y + ")");
 		System.out.println("Row: " + row + " Column: " + column + "\n");
 
-		// REPLACE THE FOLLOWING CODE!
-		/*
-		 * g.setFill(Color.WHITE); g.fillRect(0, 0, 400, 400); g.setFill(Color.BLACK);
-		 * g.fillText("mouse was pressed at (" + x + "," + y + ")", 50, 25);
-		 * g.fillText("shift key pressed was " + shift, 50, 50);
-		 */
 	} // end doMousePressed()
 
 	/**
@@ -530,7 +563,7 @@ public class Minesweeper extends Application {
 	 * initialize global variables.
 	 */
 	public void start(Stage stage) {
-		int size = 400;
+		int size = 600;
 		Canvas canvas = new Canvas(size, size);
 		BorderPane root = new BorderPane(canvas);
 		root.setTop(createMenuBar());
